@@ -100,15 +100,20 @@ OP-SOP/
 
 ## ✏️ How to edit / add a SOP
 
-Content lives in the **plaintext master `source-docs/sops.source.js`** (gitignored).
-After editing it you must **re-encrypt** so the published `data/sops.enc.js` updates:
+Content lives in the **plaintext master `source-docs/sops.json`** (gitignored — keep a
+private backup). It has the shape `{ secret, categories, data: [ …SOPs… ] }`, and every
+SOP is fully multilingual. After editing, **re-encrypt** so `data/sops.enc.js` updates:
 
 ```bash
 node tools/encrypt.js
 git add data/sops.enc.js && git commit -m "Update SOPs" && git push
 ```
 
-Each SOP is one object. To add or edit:
+> `tools/gen.js` (migrate source.js → JSON) and `tools/merge.js` (merge `i18n/<ID>.json`
+> translations) are one-time helpers used to build the multilingual master.
+
+Each SOP is one object. `purpose` and `body` are language maps (`{en,ko,zh,ja}`); `body`
+holds the block array per language (English is the fallback). To add or edit:
 
 ```js
 {

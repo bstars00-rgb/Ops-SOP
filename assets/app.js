@@ -41,6 +41,15 @@ window.bootSOPApp = function () {
     if (!obj) return "";
     return obj[state.lang] || obj.en || "";
   }
+  function bodyOf(s) { // blocks array for the active language (en fallback)
+    var b = s.body;
+    if (Array.isArray(b)) return b;            // legacy shape
+    if (!b) return [];
+    return b[state.lang] || b.en || [];
+  }
+  function purposeOf(s) {
+    return typeof s.purpose === "string" ? s.purpose : tr(s.purpose);
+  }
   function catLabel(id) {
     var c = CATS.find(function (x) { return x.id === id; });
     return c ? tr(c.label) : id;
@@ -78,11 +87,13 @@ window.bootSOPApp = function () {
     LANGS.forEach(function (l) {
       if (s.title[l]) parts.push(s.title[l]);
       if (s.summary && s.summary[l]) parts.push(s.summary[l]);
+      if (s.purpose && s.purpose[l]) parts.push(s.purpose[l]);
+      var blk = s.body && (Array.isArray(s.body) ? (l === "en" ? s.body : null) : s.body[l]);
+      if (blk) blk.forEach(function (b) { parts.push(flattenBlock(b)); });
     });
-    if (s.purpose) parts.push(s.purpose);
+    if (typeof s.purpose === "string") parts.push(s.purpose);
     if (s.tags) parts.push(s.tags.join(" "));
     if (s.applicable) parts.push(s.applicable);
-    (s.blocks || []).forEach(function (b) { parts.push(flattenBlock(b)); });
     return parts.join("  ").toLowerCase();
   }
   function flattenBlock(b) {
@@ -224,7 +235,8 @@ window.bootSOPApp = function () {
 
   // ---- render: detail ----
   function renderDetail(s) {
-    var headings = (s.blocks || []).filter(function (b) { return b.t === "h"; });
+    var blocks = bodyOf(s);
+    var headings = blocks.filter(function (b) { return b.t === "h"; });
     var meta = [];
     meta.push(metaItem(t("version"), s.version));
     if (s.effective) meta.push(metaItem(t("effective"), s.effective));
@@ -233,7 +245,8 @@ window.bootSOPApp = function () {
     if (s.applicable) meta.push(metaItem(t("appliesTo"), s.applicable));
     if (s.related)    meta.push(metaItem(t("relatedSop"), s.related));
 
-    var untranslatedNote = state.lang !== "en"
+    var isFallback = !Array.isArray(s.body) && s.body && !s.body[state.lang] && state.lang !== "en";
+    var untranslatedNote = isFallback
       ? '<div class="untranslated-flag">' + esc(t("untranslated")) + "</div>" : "";
 
     detailView.innerHTML =
@@ -255,8 +268,8 @@ window.bootSOPApp = function () {
         (headings.length > 2 ? buildQuickNav(headings) : "") +
         '<div class="content">' +
           '<h3 class="sec-title">' + esc(t("purpose")) + "</h3>" +
-          "<p>" + esc(s.purpose) + "</p>" +
-          (s.blocks || []).map(renderBlock).join("") +
+          "<p>" + esc(purposeOf(s)) + "</p>" +
+          blocks.map(renderBlock).join("") +
         "</div>" +
       "</div>";
 

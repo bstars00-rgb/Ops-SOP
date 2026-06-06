@@ -1,7 +1,8 @@
 /*
  * Encrypt the SOP dataset for safe publishing on a PUBLIC static host.
  *
- *   Input : source-docs/sops.source.js   (PLAINTEXT, gitignored — the editable master)
+ *   Input : source-docs/sops.json        (PLAINTEXT, gitignored — the editable master,
+ *                                          {secret, categories, data}; multilingual)
  *   Output: data/sops.enc.js             (CIPHERTEXT, committed — useless without the password)
  *
  * Crypto: PBKDF2-SHA256(passphrase, salt, iterations) -> AES-256-GCM key.
@@ -22,22 +23,20 @@ const PASS = (process.env.SOP_PASS || "OHMYHOTEL2026").trim();
 const ITERATIONS = 200000;
 
 const ROOT = path.resolve(__dirname, "..");
-const SRC = path.join(ROOT, "source-docs", "sops.source.js");
+const SRC = path.join(ROOT, "source-docs", "sops.json");
 const OUT = path.join(ROOT, "data", "sops.enc.js");
 
-// --- load the plaintext dataset by evaluating the source module ---
-global.window = {};
-require(SRC);
-const payload = JSON.stringify({
-  secret: global.window.SOP_SECRET,
-  categories: global.window.SOP_CATEGORIES,
-  data: global.window.SOP_DATA
-});
-
-if (!global.window.SOP_DATA || !global.window.SOP_DATA.length) {
-  console.error("ERROR: source produced no SOP_DATA. Aborting.");
+// --- load the plaintext JSON master ---
+const master = JSON.parse(fs.readFileSync(SRC, "utf8"));
+if (!master.data || !master.data.length) {
+  console.error("ERROR: sops.json has no data. Aborting.");
   process.exit(1);
 }
+const payload = JSON.stringify({
+  secret: master.secret,
+  categories: master.categories,
+  data: master.data
+});
 
 // --- derive key + encrypt ---
 const passphrase = USER + ":" + PASS;
@@ -67,6 +66,6 @@ const banner =
   " * Useless without the login password. */\n";
 fs.writeFileSync(OUT, banner + "window.SOP_ENC = " + JSON.stringify(blob) + ";\n");
 
-console.log("Encrypted " + global.window.SOP_DATA.length + " SOPs.");
+console.log("Encrypted " + master.data.length + " SOPs.");
 console.log("  user (label): " + USER);
 console.log("  output: " + path.relative(ROOT, OUT) + " (" + ctWithTag.length + " bytes ciphertext)");
