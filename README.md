@@ -5,6 +5,10 @@ Standard Operating Procedures (SOP-001 → SOP-018).
 
 > **English is the base language.** Korean (한국어), Chinese (中文), and Japanese (日本語)
 > are selectable from the top-right language switcher. Light/Dark mode included.
+>
+> 🔐 **The site is login-gated.** SOP content ships **AES-256-GCM encrypted** and is
+> decrypted in the browser only after the correct **ID + password** are entered.
+> Credentials are shared with the team privately — they are **not** stored in this repo.
 
 ![status](https://img.shields.io/badge/type-static_prototype-blue) ![langs](https://img.shields.io/badge/i18n-en%20%C2%B7%20ko%20%C2%B7%20zh%20%C2%B7%20ja-green)
 
@@ -18,8 +22,9 @@ Standard Operating Procedures (SOP-001 → SOP-018).
 - 🌗 **Dark mode** — auto-detects system preference, remembers your choice.
 - 🔗 **Deep links** — every SOP has its own URL (`#/sop/SOP-008`); use **Copy link** to share.
 - 🖨 **Print-friendly** — clean printout per SOP.
-- 🔒 **Safe to publish** — all passwords, access keys, and the card reference from the source documents have been replaced with `🔒 [Stored in the team password manager]`.
-- ⚡ **Zero build, zero dependencies** — plain HTML/CSS/JS. Works offline; open `index.html` directly or host anywhere.
+- 🔐 **Login gate + encrypted content** — SOP data is published as ciphertext (`data/sops.enc.js`) and decrypted client-side only after a correct ID + password. Without the password, the content cannot be read even by downloading the files.
+- 🔒 **Credentials redacted** — passwords, access keys, and the card reference from the source documents are replaced with `🔒 [Stored in the team password manager]`.
+- ⚡ **Near-zero build** — plain HTML/CSS/JS. The only "build" step is re-encrypting the data after a content edit (`node tools/encrypt.js`).
 
 ---
 
@@ -55,15 +60,17 @@ rather than a fully public site.
 
 ## 🖥 Run locally
 
-No build step. Either:
+Decryption uses the Web Crypto API, which browsers only enable in a **secure context**
+(`https://` or `localhost`). So **serve it** rather than opening `index.html` from disk:
 
-- **Open directly:** double-click `index.html` (works because data is loaded as plain `<script>`, not `fetch`), **or**
-- **Serve it** (recommended, avoids any browser file:// quirks):
-  ```bash
-  npx serve .          # then open http://localhost:3000
-  # or
-  python -m http.server 8080
-  ```
+```bash
+npx serve .          # then open http://localhost:3000
+# or
+python -m http.server 8080
+```
+
+> Opening `index.html` directly via `file://` will show the login screen but cannot decrypt.
+> Use the served URL or the live site.
 
 ---
 
@@ -71,16 +78,21 @@ No build step. Either:
 
 ```
 OP-SOP/
-├── index.html            # App shell
-├── .nojekyll             # GitHub Pages: serve files as-is
+├── index.html              # App shell + login gate markup
+├── .nojekyll               # GitHub Pages: serve files as-is
 ├── assets/
-│   ├── styles.css        # Light/dark theming + layout
-│   ├── app.js            # Search, filters, routing, i18n, theme
-│   └── i18n.js           # UI string translations (en/ko/zh/ja)
+│   ├── styles.css          # Light/dark theming + layout + gate
+│   ├── app.js              # Search, filters, routing, i18n (booted after unlock)
+│   ├── auth.js             # Login gate + AES decryption + boot
+│   └── i18n.js             # UI string translations (en/ko/zh/ja)
 ├── data/
-│   └── sops.js           # ⭐ All 18 SOPs (single source of truth)
-├── source-docs/          # Original source .docx (gitignored — has plaintext credentials)
-├── ROADMAP.md            # Planned enhancements (고도화 기획)
+│   └── sops.enc.js         # ⭐ Encrypted SOP data (committed; useless without password)
+├── tools/
+│   └── encrypt.js          # Regenerates data/sops.enc.js from the master
+├── source-docs/            # GITIGNORED — never published:
+│   ├── sops.source.js      #   ⭐ PLAINTEXT master you edit
+│   └── *.docx              #   original source documents (plaintext credentials)
+├── ROADMAP.md              # Planned enhancements (고도화 기획)
 └── README.md
 ```
 
@@ -88,7 +100,13 @@ OP-SOP/
 
 ## ✏️ How to edit / add a SOP
 
-Everything lives in **`data/sops.js`** — no code changes needed for content.
+Content lives in the **plaintext master `source-docs/sops.source.js`** (gitignored).
+After editing it you must **re-encrypt** so the published `data/sops.enc.js` updates:
+
+```bash
+node tools/encrypt.js
+git add data/sops.enc.js && git commit -m "Update SOPs" && git push
+```
 
 Each SOP is one object. To add or edit:
 
@@ -119,7 +137,27 @@ so it renders as the safe 🔒 placeholder.
 
 To translate a SOP body into ko/zh/ja later, the cleanest path is to make `blocks`
 language-aware (e.g. `blocks: { en: [...], ko: [...] }`) and have `renderDetail` pick the
-active language — see `ROADMAP.md`.
+active language — see `ROADMAP.md`. (Remember to re-run `node tools/encrypt.js` afterwards.)
+
+---
+
+## 🔐 Login & changing the password
+
+- Both **ID and password** are required — they together derive the AES key, so a wrong ID
+  fails exactly like a wrong password.
+- The login is remembered for the browser-tab session only (`sessionStorage`); closing the
+  tab requires logging in again.
+- **To change the password** (or ID), re-encrypt with new values and push:
+  ```bash
+  SOP_USER=OHMYHOTEL SOP_PASS=YourNewPassword node tools/encrypt.js
+  git add data/sops.enc.js && git commit -m "Rotate access password" && git push
+  ```
+- Share the password with the team **out-of-band** (chat/password manager) — never commit it.
+
+> ⚠️ **What this protects (and doesn't).** Encryption keeps the content unreadable without
+> the password — strong as long as the password is strong and shared carefully. It does **not**
+> protect against an authorized person re-sharing the decrypted content. For stronger control,
+> combine with a private repo / authenticated hosting.
 
 ---
 
@@ -127,10 +165,11 @@ active language — see `ROADMAP.md`.
 
 1. 이 폴더를 GitHub 새 저장소에 올립니다 (위 *Deploy* 명령 참고).
 2. **Settings → Pages → Branch: main / root** 로 배포합니다.
-3. 우측 상단에서 **언어(영어·한국어·중국어·일본어)** 와 **다크모드**를 전환할 수 있습니다.
-4. SOP 내용 수정은 **`data/sops.js`** 파일만 편집하면 됩니다.
-5. ⚠️ 자격 증명·내부 규칙이 포함되어 있으므로 **비공개(private) 저장소** 사용을 권장합니다.
-6. 추가 고도화 계획은 [`ROADMAP.md`](ROADMAP.md) 를 확인하세요.
+3. 접속 시 **아이디 + 비밀번호**로 로그인합니다. 콘텐츠는 암호화되어 있어 비밀번호 없이는 내용을 볼 수 없습니다. (비밀번호는 팀에 별도로 공유 — 저장소에는 없음)
+4. 우측 상단에서 **언어(영어·한국어·중국어·일본어)** 와 **다크모드**를 전환할 수 있습니다.
+5. SOP 내용 수정은 비공개 마스터 **`source-docs/sops.source.js`** 를 편집한 뒤 **`node tools/encrypt.js`** 로 재암호화하고 `data/sops.enc.js` 를 커밋합니다.
+6. 비밀번호 변경: `SOP_PASS=새비밀번호 node tools/encrypt.js` 실행 후 커밋.
+7. 추가 고도화 계획은 [`ROADMAP.md`](ROADMAP.md) 를 확인하세요.
 
 ---
 
