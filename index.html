@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VNOP SOP Hub</title>
+  <meta name="description" content="Searchable Standard Operating Procedures for the VNOP Operations team." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <!-- Set theme before paint to avoid a flash of the wrong theme -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("sop-theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+        var l = localStorage.getItem("sop-lang");
+        if (l) document.documentElement.setAttribute("lang", l);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="locked">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- LOGIN GATE (content stays AES-encrypted until unlocked) -->
+  <div id="authGate" class="auth-gate">
+    <div class="auth-tools">
+      <select id="gateLang" class="lang-select" aria-label="Language"></select>
+      <button class="icon-btn js-theme-toggle" type="button" aria-label="Toggle theme">
+        <span class="theme-icon theme-icon-sun" aria-hidden="true">☀️</span>
+        <span class="theme-icon theme-icon-moon" aria-hidden="true">🌙</span>
+      </button>
+    </div>
+    <form id="authForm" class="auth-card" autocomplete="off">
+      <div class="auth-mark">SOP</div>
+      <h1 class="auth-title" data-i18n="lockTitle">Team Access</h1>
+      <p class="auth-sub" data-i18n="lockSubtitle">Sign in to view the VNOP SOPs</p>
+
+      <label class="auth-field">
+        <span data-i18n="idLabel">ID</span>
+        <input id="authId" type="text" autocomplete="username"
+               autocapitalize="characters" spellcheck="false" required />
+      </label>
+      <label class="auth-field">
+        <span data-i18n="pwLabel">Password</span>
+        <input id="authPw" type="password" autocomplete="current-password" required />
+      </label>
+
+      <p id="authError" class="auth-error" role="alert" hidden></p>
+      <button id="authSubmit" type="submit" class="auth-btn" data-i18n="unlockBtn">Unlock</button>
+      <p class="auth-note" data-i18n="lockNote"></p>
+    </form>
+  </div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <button class="brand" id="brandHome" type="button" aria-label="Home">
+        <span class="brand-mark">SOP</span>
+        <span class="brand-text">
+          <span class="brand-title" data-i18n="appTitle">VNOP SOP Hub</span>
+          <span class="brand-sub" data-i18n="appSubtitle">Standard Operating Procedures</span>
+        </span>
+      </button>
+
+      <div class="topbar-actions">
+        <div class="select-wrap">
+          <label class="sr-only" for="langSelect" data-i18n="language">Language</label>
+          <select id="langSelect" class="lang-select" aria-label="Language"></select>
+        </div>
+        <button id="themeToggle" class="icon-btn js-theme-toggle" type="button" aria-label="Toggle theme">
+          <span class="theme-icon theme-icon-sun" aria-hidden="true">☀️</span>
+          <span class="theme-icon theme-icon-moon" aria-hidden="true">🌙</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="container">
+    <!-- LIST VIEW -->
+    <section id="listView">
+      <div class="hero">
+        <h1 class="hero-title" data-i18n="appTitle">VNOP SOP Hub</h1>
+        <p class="hero-sub" data-i18n="appSubtitle">Standard Operating Procedures · Booking Operations</p>
+
+        <div class="search-box">
+          <span class="search-icon" aria-hidden="true">🔎</span>
+          <input id="searchInput" type="search" autocomplete="off"
+                 data-i18n-attr="placeholder" data-i18n="searchPlaceholder"
+                 placeholder="Search SOPs…" />
+          <button id="searchClear" class="search-clear" type="button" hidden aria-label="Clear">✕</button>
+        </div>
+        <p class="search-hint" data-i18n="searchHint"></p>
+      </div>
+
+      <div id="filters" class="filters" role="tablist" aria-label="Categories"></div>
+
+      <p id="resultCount" class="result-count" aria-live="polite"></p>
+
+      <div id="cardGrid" class="card-grid"></div>
+
+      <div id="emptyState" class="empty-state" hidden>
+        <p class="empty-title" data-i18n="noResults">No SOPs match your search.</p>
+        <p class="empty-hint" data-i18n="noResultsHint"></p>
+      </div>
+    </section>
+
+    <!-- DETAIL VIEW -->
+    <article id="detailView" class="detail" hidden></article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p data-i18n="footer"></p>
+      <p class="footer-sec" data-i18n="securityNote"></p>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="assets/i18n.js"></script>
+  <script src="data/sops.enc.js"></script>
+  <script src="assets/app.js"></script>
+  <script src="assets/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+# Original source documents contain PLAINTEXT credentials (passwords, access keys,
+# card reference). They are the source for data/sops.js but must NOT be published.
+# NOTE: kept in source-docs/ (NOT "data/", which is the app's published data folder —
+# on case-insensitive Windows a "Data/" rule would also hide data/sops.js).
+source-docs/
+
+# Never publish the PLAINTEXT SOP data. The editable master lives in
+# source-docs/sops.source.js; only data/sops.enc.js (ciphertext) is committed.
+data/sops.js
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.tmp
+.tmp_docx/
+
+# Dependency / tooling caches (none required, but just in case)
+node_modules/
