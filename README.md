@@ -18,6 +18,8 @@ Standard Operating Procedures (SOP-001 → SOP-018).
 
 - 🔎 **Instant full-text search** — title, summary, keyword, body text, or SOP number (`SOP-015`).
 - 🗂 **Category filters** — Booking Handling · Agent Requests · Manual Booking · Finance & Disputes.
+- 📖 **Glossary** — searchable, multilingual definitions (HCN, ELLIS, Override, …); acronyms in a SOP show their definition on hover.
+- 🧭 **Guided mode (decision trees)** — interactive yes/no flows for branch-heavy SOPs (001, 002, 004, 005, 006, 008) that lead the operator to the correct action.
 - 🌐 **4 languages** — English (base) + Korean / Chinese / Japanese. UI, SOP titles & summaries are fully translated; SOP body text is in English with a structure ready for translation.
 - 🌗 **Dark mode** — auto-detects system preference, remembers your choice.
 - 🔗 **Deep links** — every SOP has its own URL (`#/sop/SOP-008`); use **Copy link** to share.
@@ -109,8 +111,12 @@ node tools/encrypt.js
 git add data/sops.enc.js && git commit -m "Update SOPs" && git push
 ```
 
-> `tools/gen.js` (migrate source.js → JSON) and `tools/merge.js` (merge `i18n/<ID>.json`
-> translations) are one-time helpers used to build the multilingual master.
+> Helper scripts (build the multilingual master, then re-encrypt):
+> `tools/gen.js` (legacy migrate), `tools/merge.js` (ko/zh/ja SOP bodies),
+> `tools/gen-vi-input.js` + `tools/merge-vi.js` (Vietnamese pass),
+> `tools/merge-extras.js` (glossary + decision trees from `source-docs/extras/<lang>.json`).
+> The glossary and decision trees live in `source-docs/extras/*.json` and are merged into
+> `sops.json` under `glossary` and `trees`, so they are encrypted and login-gated like the SOPs.
 
 Each SOP is one object. `purpose` and `body` are language maps (`{en,ko,zh,ja}`); `body`
 holds the block array per language (English is the fallback). To add or edit:

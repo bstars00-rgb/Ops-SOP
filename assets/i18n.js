@@ -42,7 +42,17 @@ window.I18N = {
     securityNote: "Credentials shown as 🔒 are stored in the team password manager — never published here.",
     quickNav: "On this page",
     openSop: "Open",
-    untranslated: "Body shown in English — translation pending."
+    untranslated: "Body shown in English — translation pending.",
+    glossary: "Glossary",
+    glossarySearch: "Search terms…",
+    glossaryEmpty: "No matching terms.",
+    glossaryHint: "Highlighted terms in a SOP show their definition on hover.",
+    guidedMode: "Guided mode",
+    guidedIntro: "Answer the questions to reach the correct action.",
+    restart: "Start over",
+    back: "Back",
+    outcomeLabel: "Action",
+    close: "Close"
   },
   ko: {
     _name: "한국어",
@@ -83,7 +93,17 @@ window.I18N = {
     securityNote: "🔒로 표시된 자격 증명은 팀 비밀번호 관리자에 보관되며 여기에 게시되지 않습니다.",
     quickNav: "이 페이지 내용",
     openSop: "열기",
-    untranslated: "본문은 영어로 표시됩니다 — 번역 예정."
+    untranslated: "본문은 영어로 표시됩니다 — 번역 예정.",
+    glossary: "용어집",
+    glossarySearch: "용어 검색…",
+    glossaryEmpty: "일치하는 용어가 없습니다.",
+    glossaryHint: "SOP 본문에서 강조된 용어에 마우스를 올리면 설명이 표시됩니다.",
+    guidedMode: "가이드 모드",
+    guidedIntro: "질문에 답하면 올바른 조치를 찾을 수 있습니다.",
+    restart: "처음부터",
+    back: "뒤로",
+    outcomeLabel: "조치",
+    close: "닫기"
   },
   zh: {
     _name: "中文",
@@ -124,7 +144,17 @@ window.I18N = {
     securityNote: "以 🔒 显示的凭据保存在团队密码管理器中，绝不会在此发布。",
     quickNav: "本页目录",
     openSop: "打开",
-    untranslated: "正文以英文显示 — 翻译待补充。"
+    untranslated: "正文以英文显示 — 翻译待补充。",
+    glossary: "术语表",
+    glossarySearch: "搜索术语…",
+    glossaryEmpty: "没有匹配的术语。",
+    glossaryHint: "将鼠标悬停在 SOP 中高亮的术语上可查看释义。",
+    guidedMode: "引导模式",
+    guidedIntro: "回答问题以找到正确的处理方式。",
+    restart: "重新开始",
+    back: "返回",
+    outcomeLabel: "处理",
+    close: "关闭"
   },
   ja: {
     _name: "日本語",
@@ -165,7 +195,17 @@ window.I18N = {
     securityNote: "🔒 で表示された認証情報はチームのパスワード管理に保管され、ここには公開されません。",
     quickNav: "このページの内容",
     openSop: "開く",
-    untranslated: "本文は英語で表示されます — 翻訳予定。"
+    untranslated: "本文は英語で表示されます — 翻訳予定。",
+    glossary: "用語集",
+    glossarySearch: "用語を検索…",
+    glossaryEmpty: "一致する用語がありません。",
+    glossaryHint: "SOP 内のハイライトされた用語にカーソルを合わせると説明が表示されます。",
+    guidedMode: "ガイドモード",
+    guidedIntro: "質問に答えると正しい対応にたどり着きます。",
+    restart: "最初から",
+    back: "戻る",
+    outcomeLabel: "対応",
+    close: "閉じる"
   },
   vi: {
     _name: "Tiếng Việt",
@@ -206,6 +246,16 @@ window.I18N = {
     securityNote: "Thông tin đăng nhập hiển thị dạng 🔒 được lưu trong trình quản lý mật khẩu của nhóm — không bao giờ công bố tại đây.",
     quickNav: "Nội dung trang này",
     openSop: "Mở",
-    untranslated: "Nội dung hiển thị bằng tiếng Anh — đang chờ dịch."
+    untranslated: "Nội dung hiển thị bằng tiếng Anh — đang chờ dịch.",
+    glossary: "Thuật ngữ",
+    glossarySearch: "Tìm thuật ngữ…",
+    glossaryEmpty: "Không có thuật ngữ phù hợp.",
+    glossaryHint: "Di chuột lên các thuật ngữ được tô sáng trong SOP để xem định nghĩa.",
+    guidedMode: "Chế độ hướng dẫn",
+    guidedIntro: "Trả lời các câu hỏi để tìm đúng hành động cần thực hiện.",
+    restart: "Bắt đầu lại",
+    back: "Quay lại",
+    outcomeLabel: "Hành động",
+    close: "Đóng"
   }
 };

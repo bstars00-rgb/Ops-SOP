@@ -18,6 +18,8 @@ window.bootSOPApp = function () {
   var SOPS = window.SOP_DATA || [];
   var CATS = window.SOP_CATEGORIES || [];
   var I18N = window.I18N || {};
+  var GLOSSARY = window.SOP_GLOSSARY || [];
+  var TREES = window.SOP_TREES || {};
 
   // ---- element refs ----
   var $ = function (sel) { return document.querySelector(sel); };
@@ -260,9 +262,11 @@ window.bootSOPApp = function () {
         '<div class="meta-grid">' + meta.join("") + "</div>" +
       "</div>" +
       '<div class="detail-actions">' +
+        (TREES[s.id] ? '<button class="btn btn-accent" id="guidedBtn" type="button">🧭 ' + esc(t("guidedMode")) + "</button>" : "") +
         '<button class="btn" id="printBtn" type="button">🖨 ' + esc(t("print")) + "</button>" +
         '<button class="btn" id="copyBtn" type="button">🔗 ' + esc(t("copyLink")) + "</button>" +
       "</div>" +
+      '<div id="treePanel" class="tree-panel" hidden></div>' +
       untranslatedNote +
       '<div class="detail-body">' +
         (headings.length > 2 ? buildQuickNav(headings) : "") +
@@ -282,7 +286,141 @@ window.bootSOPApp = function () {
                                                  function () { toast(url); });
       } else { toast(url); }
     });
+    // decision tree (guided mode)
+    var guided = detailView.querySelector("#guidedBtn");
+    if (guided) {
+      guided.addEventListener("click", function () {
+        var panel = detailView.querySelector("#treePanel");
+        if (!panel.hidden) { panel.hidden = true; return; }
+        panel.hidden = false;
+        renderTree(s.id, TREES[s.id].start, []);
+        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+    decorateTerms(detailView.querySelector(".content"));
     wireQuickNav();
+  }
+
+  // ---- decision tree engine ----
+  function renderTree(sopId, nodeId, history) {
+    var panel = detailView.querySelector("#treePanel");
+    if (!panel) return;
+    var tree = TREES[sopId];
+    var node = tree.nodes[nodeId];
+    var crumbs = '<div class="tree-bar">' +
+      '<span class="tree-step">' + (history.length + 1) + "</span>" +
+      '<button class="tree-link" id="treeRestart" type="button">↻ ' + esc(t("restart")) + "</button>" +
+      (history.length ? '<button class="tree-link" id="treeBack" type="button">← ' + esc(t("back")) + "</button>" : "") +
+      "</div>";
+
+    if (node.outcome !== undefined) {
+      // shouldn't happen at node level; outcomes live on options
+    }
+    var html = crumbs +
+      '<div class="tree-q">' + esc(tr(node.q)) + "</div>" +
+      '<div class="tree-options">' +
+      node.options.map(function (opt, i) {
+        return '<button class="tree-opt" type="button" data-i="' + i + '">' + esc(tr(opt.label)) + "</button>";
+      }).join("") +
+      "</div>";
+    panel.innerHTML = html;
+
+    panel.querySelector("#treeRestart").addEventListener("click", function () {
+      renderTree(sopId, tree.start, []);
+    });
+    var back = panel.querySelector("#treeBack");
+    if (back) back.addEventListener("click", function () {
+      var prev = history.slice(0, -1);
+      var prevNode = history.length ? history[history.length - 1] : tree.start;
+      renderTree(sopId, prevNode, prev);
+    });
+    panel.querySelectorAll(".tree-opt").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var opt = node.options[+b.getAttribute("data-i")];
+        if (opt.goto) {
+          renderTree(sopId, opt.goto, history.concat([nodeId]));
+        } else if (opt.outcome !== undefined) {
+          showOutcome(sopId, tr(opt.label), tr(opt.outcome), history.concat([nodeId]));
+        }
+      });
+    });
+  }
+  function showOutcome(sopId, choice, text, history) {
+    var panel = detailView.querySelector("#treePanel");
+    var tree = TREES[sopId];
+    panel.innerHTML =
+      '<div class="tree-bar">' +
+        '<button class="tree-link" id="treeRestart" type="button">↻ ' + esc(t("restart")) + "</button>" +
+        '<button class="tree-link" id="treeBack" type="button">← ' + esc(t("back")) + "</button>" +
+      "</div>" +
+      '<div class="tree-chosen">› ' + esc(choice) + "</div>" +
+      '<div class="tree-outcome"><span class="tree-outcome-tag">✅ ' + esc(t("outcomeLabel")) + "</span>" +
+        "<p>" + esc(text) + "</p></div>";
+    panel.querySelector("#treeRestart").addEventListener("click", function () { renderTree(sopId, tree.start, []); });
+    panel.querySelector("#treeBack").addEventListener("click", function () {
+      var last = history[history.length - 1];
+      renderTree(sopId, last, history.slice(0, -1));
+    });
+  }
+
+  // ---- glossary term tooltips inside SOP content ----
+  function decorateTerms(root) {
+    if (!root || !GLOSSARY.length) return;
+    var map = {};
+    GLOSSARY.forEach(function (g) {
+      if (/^[A-Za-z0-9]+$/.test(g.term)) map[g.term] = g; // acronym-style tokens only
+    });
+    var tokens = Object.keys(map);
+    if (!tokens.length) return;
+    var re = new RegExp("\\b(" + tokens.join("|") + ")\\b", "g");
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    var nodes = [], n;
+    while ((n = walker.nextNode())) {
+      if (n.parentNode && n.parentNode.closest("abbr,.tree-panel,h3")) continue;
+      if (re.test(n.nodeValue)) { re.lastIndex = 0; nodes.push(n); }
+    }
+    nodes.forEach(function (node) {
+      var frag = document.createDocumentFragment();
+      var last = 0, m, s = node.nodeValue;
+      re.lastIndex = 0;
+      while ((m = re.exec(s))) {
+        if (m.index > last) frag.appendChild(document.createTextNode(s.slice(last, m.index)));
+        var g = map[m[1]];
+        var ab = document.createElement("abbr");
+        ab.className = "gterm";
+        ab.title = tr(g.full) + " — " + tr(g.def);
+        ab.textContent = m[1];
+        frag.appendChild(ab);
+        last = m.index + m[1].length;
+      }
+      if (last < s.length) frag.appendChild(document.createTextNode(s.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  // ---- glossary modal ----
+  function openGlossary() {
+    var modal = $("#glossaryModal");
+    modal.hidden = false;
+    renderGlossary("");
+    var input = $("#glossaryInput");
+    input.value = "";
+    setTimeout(function () { input.focus(); }, 30);
+  }
+  function closeGlossary() { $("#glossaryModal").hidden = true; }
+  function renderGlossary(q) {
+    var list = $("#glossaryList");
+    q = (q || "").trim().toLowerCase();
+    var rows = GLOSSARY.filter(function (g) {
+      if (!q) return true;
+      return (g.term + " " + tr(g.full) + " " + tr(g.def)).toLowerCase().indexOf(q) !== -1;
+    });
+    if (!rows.length) { list.innerHTML = '<p class="glossary-empty">' + esc(t("glossaryEmpty")) + "</p>"; return; }
+    list.innerHTML = rows.map(function (g) {
+      return '<div class="gitem"><div class="gitem-term">' + esc(g.term) +
+        ' <span class="gitem-full">' + esc(tr(g.full)) + "</span></div>" +
+        '<p class="gitem-def">' + esc(tr(g.def)) + "</p></div>";
+    }).join("");
   }
   function metaItem(k, v) {
     return '<div class="meta-item"><span class="meta-k">' + esc(k) +
@@ -394,6 +532,20 @@ window.bootSOPApp = function () {
   });
 
   // ---- init ----
+  // glossary modal wiring
+  if (GLOSSARY.length) {
+    $("#glossaryBtn").addEventListener("click", openGlossary);
+    $("#glossaryInput").addEventListener("input", function () { renderGlossary(this.value); });
+    $("#glossaryModal").addEventListener("click", function (e) {
+      if (e.target.getAttribute("data-close")) closeGlossary();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !$("#glossaryModal").hidden) closeGlossary();
+    });
+  } else {
+    var gb = $("#glossaryBtn"); if (gb) gb.style.display = "none";
+  }
+
   buildLangSelect();
   applyI18n();
   renderFilters();

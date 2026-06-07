@@ -35,6 +35,8 @@ if (!master.data || !master.data.length) {
 const payload = JSON.stringify({
   secret: master.secret,
   categories: master.categories,
+  glossary: master.glossary || [],
+  trees: master.trees || {},
   data: master.data
 });
 

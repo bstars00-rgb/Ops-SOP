@@ -46,6 +46,8 @@
     var payload = JSON.parse(json);
     window.SOP_SECRET = payload.secret;
     window.SOP_CATEGORIES = payload.categories;
+    window.SOP_GLOSSARY = payload.glossary || [];
+    window.SOP_TREES = payload.trees || {};
     window.SOP_DATA = payload.data;
     document.body.classList.remove("locked");
     var gate = $("#authGate");

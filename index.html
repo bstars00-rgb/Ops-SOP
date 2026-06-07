@@ -64,6 +64,7 @@
       </button>
 
       <div class="topbar-actions">
+        <button id="glossaryBtn" class="icon-btn" type="button" aria-label="Glossary" data-i18n-attr="title" data-i18n="glossary" title="Glossary">📖</button>
         <div class="select-wrap">
           <label class="sr-only" for="langSelect" data-i18n="language">Language</label>
           <select id="langSelect" class="lang-select" aria-label="Language"></select>
@@ -115,6 +116,21 @@
       <p class="footer-sec" data-i18n="securityNote"></p>
     </div>
   </footer>
+
+  <!-- GLOSSARY MODAL -->
+  <div id="glossaryModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="glossaryTitle">
+      <div class="modal-head">
+        <h2 id="glossaryTitle" data-i18n="glossary">Glossary</h2>
+        <button class="modal-close icon-btn" type="button" data-close="1" aria-label="Close">✕</button>
+      </div>
+      <input id="glossaryInput" class="glossary-search" type="search" autocomplete="off"
+             data-i18n-attr="placeholder" data-i18n="glossarySearch" placeholder="Search terms…" />
+      <p class="glossary-hint" data-i18n="glossaryHint"></p>
+      <div id="glossaryList" class="glossary-list"></div>
+    </div>
+  </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
