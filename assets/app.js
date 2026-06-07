@@ -7,7 +7,7 @@ window.bootSOPApp = function () {
   if (window.__sopBooted) return;   // guard against double-boot
   window.__sopBooted = true;
 
-  var LANGS = ["en", "ko", "zh", "ja"];
+  var LANGS = ["en", "ko", "zh", "ja", "vi"];
   var state = {
     lang: document.documentElement.getAttribute("lang") || "en",
     cat: "all",

@@ -6,7 +6,7 @@
 (function () {
   "use strict";
 
-  var LANGS = ["en", "ko", "zh", "ja"];
+  var LANGS = ["en", "ko", "zh", "ja", "vi"];
   var I18N = window.I18N || {};
   var SS_KEY = "sop-pass";   // sessionStorage: remember unlock for the tab session
 
