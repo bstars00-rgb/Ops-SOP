@@ -81,6 +81,24 @@ window.bootSOPApp = function () {
     }, 1800);
   }
 
+  // ---- favorites & recently viewed (localStorage) ----
+  function lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch (e) { return []; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function getFavs() { return lsGet("sop-fav"); }
+  function isFav(id) { return getFavs().indexOf(id) !== -1; }
+  function toggleFav(id) {
+    var f = getFavs(), i = f.indexOf(id);
+    if (i === -1) f.push(id); else f.splice(i, 1);
+    lsSet("sop-fav", f);
+    return i === -1;
+  }
+  function pushRecent(id) {
+    var r = lsGet("sop-recent").filter(function (x) { return x !== id; });
+    r.unshift(id);
+    lsSet("sop-recent", r.slice(0, 8));
+  }
+  function getRecent() { return lsGet("sop-recent"); }
+
   // (theme toggle is wired globally in assets/auth.js so it works on the gate too)
 
   // ---- search index ----
@@ -122,8 +140,10 @@ window.bootSOPApp = function () {
   // ---- filtering ----
   function filtered() {
     var q = state.query.trim().toLowerCase();
+    var favs = state.cat === "fav" ? getFavs() : null;
     return SOPS.filter(function (s) {
-      if (state.cat !== "all" && s.cat !== state.cat) return false;
+      if (state.cat === "fav") { if (favs.indexOf(s.id) === -1) return false; }
+      else if (state.cat !== "all" && s.cat !== state.cat) return false;
       if (q && s._index.indexOf(q) === -1) return false;
       return true;
     });
@@ -135,15 +155,18 @@ window.bootSOPApp = function () {
     var defs = [{ id: "all", label: t("allCategories") }].concat(
       CATS.map(function (c) { return { id: c.id, label: tr(c.label) }; })
     );
+    if (getFavs().length) defs.push({ id: "fav", label: "★ " + t("favorites") });
     defs.forEach(function (d) {
       var count = d.id === "all" ? SOPS.length
+        : d.id === "fav" ? getFavs().length
         : SOPS.filter(function (s) { return s.cat === d.id; }).length;
       var btn = el("button", "chip");
       btn.type = "button";
       btn.setAttribute("role", "tab");
       btn.setAttribute("aria-selected", state.cat === d.id ? "true" : "false");
-      if (d.id !== "all") btn.style.setProperty("color", "var(--cat-" + d.id + ")");
-      btn.innerHTML = (d.id !== "all" ? '<span class="dot"></span>' : "") +
+      var isCat = d.id !== "all" && d.id !== "fav";
+      if (isCat) btn.style.setProperty("color", "var(--cat-" + d.id + ")");
+      btn.innerHTML = (isCat ? '<span class="dot"></span>' : "") +
         esc(d.label) + ' <span class="chip-count">' + count + "</span>";
       btn.addEventListener("click", function () {
         state.cat = d.id;
@@ -155,9 +178,29 @@ window.bootSOPApp = function () {
   }
 
   // ---- render: card list ----
+  function renderRecentStrip() {
+    var strip = $("#recentStrip");
+    if (!strip) return;
+    var ids = getRecent().filter(function (id) { return SOPS.some(function (s) { return s.id === id; }); });
+    var show = ids.length && state.cat === "all" && !state.query.trim();
+    if (!show) { strip.hidden = true; strip.innerHTML = ""; return; }
+    strip.hidden = false;
+    strip.innerHTML = '<span class="recent-label">' + esc(t("recent")) + "</span>" +
+      ids.slice(0, 6).map(function (id) {
+        var s = SOPS.find(function (x) { return x.id === id; });
+        return '<button class="recent-chip" type="button" data-id="' + id + '">' +
+          esc(id) + ' · ' + esc(tr(s.title)) + "</button>";
+      }).join("");
+    strip.querySelectorAll(".recent-chip").forEach(function (b) {
+      b.addEventListener("click", function () { go(b.getAttribute("data-id")); });
+    });
+  }
+
   function renderList() {
+    if (state.cat === "fav" && !getFavs().length) state.cat = "all";
     var rows = filtered();
     var q = state.query.trim();
+    renderRecentStrip();
     cardGrid.innerHTML = "";
 
     if (!rows.length) {
@@ -170,14 +213,20 @@ window.bootSOPApp = function () {
       (rows.length === 1 ? t("result") : t("results"));
 
     rows.forEach(function (s) {
-      var card = el("button", "card");
-      card.type = "button";
+      var card = el("div", "card");
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
       card.style.setProperty("--cat", "var(--cat-" + s.cat + ")");
       card.setAttribute("aria-label", s.id + " " + tr(s.title));
+      var fav = isFav(s.id);
       card.innerHTML =
         '<div class="card-top">' +
           '<span class="card-id">' + esc(s.id) + "</span>" +
-          '<span class="card-cat">' + esc(catLabel(s.cat)) + "</span>" +
+          '<span class="card-top-right">' +
+            '<span class="card-cat">' + esc(catLabel(s.cat)) + "</span>" +
+            '<button class="fav-star' + (fav ? " on" : "") + '" type="button" aria-pressed="' + fav +
+              '" aria-label="' + esc(t(fav ? "removeFav" : "addFav")) + '">' + (fav ? "★" : "☆") + "</button>" +
+          "</span>" +
         "</div>" +
         '<h2 class="card-title">' + highlight(tr(s.title), q) + "</h2>" +
         '<p class="card-summary">' + highlight(tr(s.summary), q) + "</p>" +
@@ -187,12 +236,21 @@ window.bootSOPApp = function () {
           }).join("") +
         "</div>";
       card.addEventListener("click", function () { go(s.id); });
+      card.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(s.id); }
+      });
+      card.querySelector(".fav-star").addEventListener("click", function (e) {
+        e.stopPropagation();
+        toggleFav(s.id);
+        renderFilters();
+        renderList();
+      });
       cardGrid.appendChild(card);
     });
   }
 
   // ---- render: block ----
-  function renderBlock(b) {
+  function renderBlock(b, idx) {
     switch (b.t) {
       case "h":
         return '<h3 class="sec-title" id="' + slug(b.text) + '">' + esc(b.text) + "</h3>";
@@ -225,8 +283,13 @@ window.bootSOPApp = function () {
                    '</span><span class="kv-v">' + esc(r[1]) + "</span></div>";
           }).join("") + "</div>";
       case "checklist":
-        return '<ul class="checklist">' +
-          b.items.map(function (i) { return "<li>" + esc(i) + "</li>"; }).join("") + "</ul>";
+        return '<div class="checklist-run" data-blk="' + idx + '">' +
+          '<div class="chk-progress" data-blk="' + idx + '"></div>' +
+          '<ul class="checklist">' +
+          b.items.map(function (it, ii) {
+            return '<li class="chk-item"><label><input type="checkbox" class="chk-box" data-blk="' +
+              idx + '" data-i="' + ii + '" /><span>' + esc(it) + "</span></label></li>";
+          }).join("") + "</ul></div>";
       default:
         return "";
     }
@@ -257,6 +320,10 @@ window.bootSOPApp = function () {
         '<div class="detail-eyebrow">' +
           '<span class="detail-id">' + esc(s.id) + "</span>" +
           '<span class="detail-cat">' + esc(catLabel(s.cat)) + "</span>" +
+          reviewChip(s) +
+          '<button class="fav-star detail-fav' + (isFav(s.id) ? " on" : "") + '" id="favBtn" type="button" aria-pressed="' +
+            isFav(s.id) + '" aria-label="' + esc(t(isFav(s.id) ? "removeFav" : "addFav")) + '">' +
+            (isFav(s.id) ? "★" : "☆") + "</button>" +
         "</div>" +
         '<h1 class="detail-title">' + esc(tr(s.title)) + "</h1>" +
         '<div class="meta-grid">' + meta.join("") + "</div>" +
@@ -266,7 +333,7 @@ window.bootSOPApp = function () {
         '<button class="btn" id="printBtn" type="button">🖨 ' + esc(t("print")) + "</button>" +
         '<button class="btn" id="copyBtn" type="button">🔗 ' + esc(t("copyLink")) + "</button>" +
       "</div>" +
-      '<div id="treePanel" class="tree-panel" hidden></div>' +
+      '<div id="treePanel" class="tree-panel" aria-live="polite" hidden></div>' +
       untranslatedNote +
       '<div class="detail-body">' +
         (headings.length > 2 ? buildQuickNav(headings) : "") +
@@ -286,6 +353,15 @@ window.bootSOPApp = function () {
                                                  function () { toast(url); });
       } else { toast(url); }
     });
+    var favBtn = detailView.querySelector("#favBtn");
+    if (favBtn) favBtn.addEventListener("click", function () {
+      var on = toggleFav(s.id);
+      favBtn.classList.toggle("on", on);
+      favBtn.textContent = on ? "★" : "☆";
+      favBtn.setAttribute("aria-pressed", on);
+      favBtn.setAttribute("aria-label", t(on ? "removeFav" : "addFav"));
+      renderFilters();
+    });
     // decision tree (guided mode)
     var guided = detailView.querySelector("#guidedBtn");
     if (guided) {
@@ -298,6 +374,7 @@ window.bootSOPApp = function () {
       });
     }
     decorateTerms(detailView.querySelector(".content"));
+    hydrateChecklists(detailView.querySelector(".content"), s.id);
     wireQuickNav();
   }
 
@@ -363,6 +440,33 @@ window.bootSOPApp = function () {
     });
   }
 
+  // ---- interactive checklists (progress saved per SOP) ----
+  function hydrateChecklists(root, sopId) {
+    if (!root) return;
+    root.querySelectorAll(".checklist-run").forEach(function (wrap) {
+      var blk = wrap.getAttribute("data-blk");
+      var boxes = wrap.querySelectorAll(".chk-box");
+      var prog = wrap.querySelector(".chk-progress");
+      function key(i) { return "sop-chk:" + sopId + ":" + blk + ":" + i; }
+      function update() {
+        var done = 0;
+        boxes.forEach(function (b) { if (b.checked) done++; });
+        prog.textContent = done + " / " + boxes.length;
+        prog.classList.toggle("complete", done === boxes.length && boxes.length > 0);
+      }
+      boxes.forEach(function (b, i) {
+        try { b.checked = localStorage.getItem(key(i)) === "1"; } catch (e) {}
+        b.closest(".chk-item").classList.toggle("done", b.checked);
+        b.addEventListener("change", function () {
+          try { localStorage.setItem(key(i), b.checked ? "1" : "0"); } catch (e) {}
+          b.closest(".chk-item").classList.toggle("done", b.checked);
+          update();
+        });
+      });
+      update();
+    });
+  }
+
   // ---- glossary term tooltips inside SOP content ----
   function decorateTerms(root) {
     if (!root || !GLOSSARY.length) return;
@@ -376,7 +480,7 @@ window.bootSOPApp = function () {
     var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
     var nodes = [], n;
     while ((n = walker.nextNode())) {
-      if (n.parentNode && n.parentNode.closest("abbr,.tree-panel,h3")) continue;
+      if (n.parentNode && n.parentNode.closest(".gterm,.tree-panel,h3")) continue;
       if (re.test(n.nodeValue)) { re.lastIndex = 0; nodes.push(n); }
     }
     nodes.forEach(function (node) {
@@ -386,8 +490,13 @@ window.bootSOPApp = function () {
       while ((m = re.exec(s))) {
         if (m.index > last) frag.appendChild(document.createTextNode(s.slice(last, m.index)));
         var g = map[m[1]];
-        var ab = document.createElement("abbr");
+        var ab = document.createElement("span");
         ab.className = "gterm";
+        ab.setAttribute("role", "button");
+        ab.setAttribute("tabindex", "0");
+        ab.setAttribute("data-full", tr(g.full));
+        ab.setAttribute("data-def", tr(g.def));
+        ab.setAttribute("aria-label", m[1] + ": " + tr(g.full));
         ab.title = tr(g.full) + " — " + tr(g.def);
         ab.textContent = m[1];
         frag.appendChild(ab);
@@ -399,15 +508,20 @@ window.bootSOPApp = function () {
   }
 
   // ---- glossary modal ----
+  var glossaryOpener = null;
   function openGlossary() {
     var modal = $("#glossaryModal");
+    glossaryOpener = document.activeElement;
     modal.hidden = false;
     renderGlossary("");
     var input = $("#glossaryInput");
     input.value = "";
     setTimeout(function () { input.focus(); }, 30);
   }
-  function closeGlossary() { $("#glossaryModal").hidden = true; }
+  function closeGlossary() {
+    $("#glossaryModal").hidden = true;
+    if (glossaryOpener && glossaryOpener.focus) glossaryOpener.focus();
+  }
   function renderGlossary(q) {
     var list = $("#glossaryList");
     q = (q || "").trim().toLowerCase();
@@ -422,9 +536,45 @@ window.bootSOPApp = function () {
         '<p class="gitem-def">' + esc(tr(g.def)) + "</p></div>";
     }).join("");
   }
+
+  // ---- term popover (tap / keyboard accessible) ----
+  function wireTermPopover() {
+    var pop = $("#termPop");
+    if (!pop) return;
+    function hide() { pop.hidden = true; pop._for = null; }
+    function show(el) {
+      pop.innerHTML = "<strong>" + esc(el.getAttribute("data-full")) + "</strong>" +
+        "<span>" + esc(el.getAttribute("data-def")) + "</span>";
+      pop.hidden = false;
+      var r = el.getBoundingClientRect();
+      var maxLeft = window.scrollX + document.documentElement.clientWidth - pop.offsetWidth - 12;
+      pop.style.top = (r.bottom + window.scrollY + 6) + "px";
+      pop.style.left = Math.max(window.scrollX + 8, Math.min(r.left + window.scrollX, maxLeft)) + "px";
+      pop._for = el;
+    }
+    document.addEventListener("click", function (e) {
+      var term = e.target.closest && e.target.closest(".gterm");
+      if (term) { e.stopPropagation(); if (!pop.hidden && pop._for === term) hide(); else show(term); return; }
+      if (!pop.hidden && !(e.target.closest && e.target.closest("#termPop"))) hide();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") hide();
+      var el = document.activeElement;
+      if ((e.key === "Enter" || e.key === " ") && el && el.classList && el.classList.contains("gterm")) {
+        e.preventDefault(); if (!pop.hidden && pop._for === el) hide(); else show(el);
+      }
+    });
+    window.addEventListener("scroll", function () { if (!pop.hidden) hide(); }, true);
+  }
   function metaItem(k, v) {
     return '<div class="meta-item"><span class="meta-k">' + esc(k) +
            '</span><span class="meta-v">' + esc(v) + "</span></div>";
+  }
+  function reviewChip(s) {
+    if (state.lang === "en") return "";          // English is the authored source
+    var reviewed = s.reviewed && s.reviewed[state.lang];
+    if (reviewed) return '<span class="rev-chip reviewed">✓ ' + esc(t("reviewedBadge")) + "</span>";
+    return '<span class="rev-chip draft">⚠ ' + esc(t("draftBadge")) + "</span>";
   }
   function buildQuickNav(headings) {
     return '<nav class="quicknav" aria-label="' + esc(t("quickNav")) + '">' +
@@ -458,6 +608,7 @@ window.bootSOPApp = function () {
     if (m) {
       var s = SOPS.find(function (x) { return x.id.toLowerCase() === m[1].toLowerCase(); });
       if (s) {
+        pushRecent(s.id);
         listView.hidden = true;
         detailView.hidden = false;
         renderDetail(s);
@@ -467,6 +618,7 @@ window.bootSOPApp = function () {
     }
     detailView.hidden = true;
     listView.hidden = false;
+    renderList();   // refresh stars / recently-viewed when returning to the list
   }
   window.addEventListener("hashchange", route);
 
@@ -533,14 +685,24 @@ window.bootSOPApp = function () {
 
   // ---- init ----
   // glossary modal wiring
+  wireTermPopover();
   if (GLOSSARY.length) {
     $("#glossaryBtn").addEventListener("click", openGlossary);
     $("#glossaryInput").addEventListener("input", function () { renderGlossary(this.value); });
-    $("#glossaryModal").addEventListener("click", function (e) {
+    var gmodal = $("#glossaryModal");
+    gmodal.addEventListener("click", function (e) {
       if (e.target.getAttribute("data-close")) closeGlossary();
     });
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && !$("#glossaryModal").hidden) closeGlossary();
+      if ($("#glossaryModal").hidden) return;
+      if (e.key === "Escape") { closeGlossary(); return; }
+      if (e.key === "Tab") {                       // focus trap
+        var f = gmodal.querySelectorAll('button, input, [tabindex]:not([tabindex="-1"])');
+        if (!f.length) return;
+        var first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
     });
   } else {
     var gb = $("#glossaryBtn"); if (gb) gb.style.display = "none";

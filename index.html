@@ -3,22 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'" />
   <title>VNOP SOP Hub</title>
   <meta name="description" content="Searchable Standard Operating Procedures for the VNOP Operations team." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="stylesheet" href="assets/styles.css" />
   <!-- Set theme before paint to avoid a flash of the wrong theme -->
-  <script>
-    (function () {
-      try {
-        var t = localStorage.getItem("sop-theme");
-        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        document.documentElement.setAttribute("data-theme", t);
-        var l = localStorage.getItem("sop-lang");
-        if (l) document.documentElement.setAttribute("lang", l);
-      } catch (e) {}
-    })();
-  </script>
+  <script src="assets/theme-init.js"></script>
 </head>
 <body class="locked">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -96,6 +86,8 @@
 
       <div id="filters" class="filters" role="tablist" aria-label="Categories"></div>
 
+      <div id="recentStrip" class="recent-strip" hidden></div>
+
       <p id="resultCount" class="result-count" aria-live="polite"></p>
 
       <div id="cardGrid" class="card-grid"></div>
@@ -131,6 +123,8 @@
       <div id="glossaryList" class="glossary-list"></div>
     </div>
   </div>
+
+  <div id="termPop" class="term-pop" role="tooltip" hidden></div>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 

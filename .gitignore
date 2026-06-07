@@ -14,5 +14,8 @@ Thumbs.db
 *.tmp
 .tmp_docx/
 
-# Dependency / tooling caches (none required, but just in case)
+# Dependency / tooling caches
 node_modules/
+test-results/
+playwright-report/
+.playwright/

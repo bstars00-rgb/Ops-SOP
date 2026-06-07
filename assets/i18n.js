@@ -52,7 +52,13 @@ window.I18N = {
     restart: "Start over",
     back: "Back",
     outcomeLabel: "Action",
-    close: "Close"
+    close: "Close",
+    favorites: "Favorites",
+    recent: "Recently viewed",
+    addFav: "Add to favorites",
+    removeFav: "Remove from favorites",
+    draftBadge: "Draft translation — verify against the English source",
+    reviewedBadge: "Reviewed"
   },
   ko: {
     _name: "한국어",
@@ -103,7 +109,13 @@ window.I18N = {
     restart: "처음부터",
     back: "뒤로",
     outcomeLabel: "조치",
-    close: "닫기"
+    close: "닫기",
+    favorites: "즐겨찾기",
+    recent: "최근 본 SOP",
+    addFav: "즐겨찾기 추가",
+    removeFav: "즐겨찾기 해제",
+    draftBadge: "임시 번역 — 영어 원문과 대조해 확인하세요",
+    reviewedBadge: "검수 완료"
   },
   zh: {
     _name: "中文",
@@ -154,7 +166,13 @@ window.I18N = {
     restart: "重新开始",
     back: "返回",
     outcomeLabel: "处理",
-    close: "关闭"
+    close: "关闭",
+    favorites: "收藏",
+    recent: "最近查看",
+    addFav: "加入收藏",
+    removeFav: "取消收藏",
+    draftBadge: "临时翻译 — 请与英文原文核对",
+    reviewedBadge: "已审核"
   },
   ja: {
     _name: "日本語",
@@ -205,7 +223,13 @@ window.I18N = {
     restart: "最初から",
     back: "戻る",
     outcomeLabel: "対応",
-    close: "閉じる"
+    close: "閉じる",
+    favorites: "お気に入り",
+    recent: "最近見た SOP",
+    addFav: "お気に入りに追加",
+    removeFav: "お気に入りから削除",
+    draftBadge: "暫定翻訳 — 英語の原文と照合してください",
+    reviewedBadge: "確認済み"
   },
   vi: {
     _name: "Tiếng Việt",
@@ -256,6 +280,12 @@ window.I18N = {
     restart: "Bắt đầu lại",
     back: "Quay lại",
     outcomeLabel: "Hành động",
-    close: "Đóng"
+    close: "Đóng",
+    favorites: "Yêu thích",
+    recent: "Đã xem gần đây",
+    addFav: "Thêm vào yêu thích",
+    removeFav: "Bỏ khỏi yêu thích",
+    draftBadge: "Bản dịch tạm — hãy đối chiếu với bản tiếng Anh",
+    reviewedBadge: "Đã kiểm duyệt"
   }
 };

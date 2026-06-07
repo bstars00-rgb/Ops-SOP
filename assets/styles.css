@@ -402,13 +402,23 @@ body.locked .footer { display: none !important; }
 .auth-note { font-size: 11.5px; color: var(--text-mute); margin: 18px 0 0; line-height: 1.5; }
 
 /* ---------- glossary term tooltips ---------- */
-abbr.gterm {
-  text-decoration: none;
+.gterm {
   border-bottom: 1px dotted var(--brand);
   cursor: help;
   font-weight: 600;
   color: var(--brand-ink);
 }
+.gterm:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 3px; }
+.term-pop {
+  position: absolute; z-index: 95; max-width: 300px;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--brand);
+  border-radius: 10px; padding: 10px 13px; box-shadow: var(--shadow-lg);
+  font-size: 13px; line-height: 1.5;
+}
+.term-pop strong { display: block; color: var(--brand-ink); margin-bottom: 3px; font-size: 12.5px; }
+.term-pop span { color: var(--text-soft); }
+.term-pop[hidden] { display: none; }
 
 /* ---------- glossary modal ---------- */
 .modal { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 20px; }
@@ -465,6 +475,45 @@ abbr.gterm {
 }
 .tree-outcome-tag { font-weight: 700; font-size: 13px; display: inline-block; margin-bottom: 6px; }
 .tree-outcome p { margin: 0; font-size: 14px; color: inherit; line-height: 1.6; }
+
+/* ---------- favorites ---------- */
+.card-top-right { display: inline-flex; align-items: center; gap: 8px; }
+.fav-star {
+  background: none; border: 0; cursor: pointer; font-size: 17px; line-height: 1;
+  color: var(--text-mute); padding: 2px; border-radius: 6px; transition: color .15s, transform .1s;
+}
+.fav-star:hover { color: #f5a623; }
+.fav-star.on { color: #f5a623; }
+.fav-star:active { transform: scale(.85); }
+.fav-star:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+.detail-fav { font-size: 20px; margin-left: auto; }
+
+/* ---------- review / draft chip ---------- */
+.rev-chip { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+.rev-chip.reviewed { background: var(--c-note-bg); color: var(--c-note-fg); border: 1px solid var(--c-note-bd); }
+.rev-chip.draft { background: var(--c-warn-bg); color: var(--c-warn-fg); border: 1px solid var(--c-warn-bd); }
+
+/* ---------- recently viewed ---------- */
+.recent-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 20px; }
+.recent-strip[hidden] { display: none; }
+.recent-label { font-size: 12px; color: var(--text-mute); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+.recent-chip {
+  font-family: inherit; font-size: 12.5px; cursor: pointer; color: var(--text-soft);
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px;
+  max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.recent-chip:hover { border-color: var(--brand); color: var(--brand-ink); }
+
+/* ---------- interactive checklist ---------- */
+.checklist-run { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 14px 10px; margin: 0 0 16px; background: var(--surface-2); }
+.chk-progress { font-size: 12px; font-weight: 700; color: var(--text-mute); text-align: right; padding: 6px 0 2px; font-variant-numeric: tabular-nums; }
+.chk-progress.complete { color: var(--c-note-fg); }
+.checklist-run .checklist { margin: 0; }
+.checklist-run .checklist li::before { content: none; }
+.chk-item { list-style: none; }
+.chk-item label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 5px 0; }
+.chk-item input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--brand); cursor: pointer; flex: none; }
+.chk-item.done span { text-decoration: line-through; color: var(--text-mute); }
 
 /* ---------- print ---------- */
 @media print {

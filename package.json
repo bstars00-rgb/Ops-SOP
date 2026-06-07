@@ -1,0 +1,15 @@
+{
+  "name": "vnop-sop-hub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VNOP SOP Hub — searchable, multilingual, login-gated SOP reference",
+  "scripts": {
+    "test": "node tools/test.js",
+    "build": "node tools/encrypt.js",
+    "e2e": "playwright test",
+    "e2e:install": "npm i -D @playwright/test && npx playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}

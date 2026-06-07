@@ -19,7 +19,11 @@ Standard Operating Procedures (SOP-001 → SOP-018).
 - 🔎 **Instant full-text search** — title, summary, keyword, body text, or SOP number (`SOP-015`).
 - 🗂 **Category filters** — Booking Handling · Agent Requests · Manual Booking · Finance & Disputes.
 - 📖 **Glossary** — searchable, multilingual definitions (HCN, ELLIS, Override, …); acronyms in a SOP show their definition on hover.
-- 🧭 **Guided mode (decision trees)** — interactive yes/no flows for branch-heavy SOPs (001, 002, 004, 005, 006, 008) that lead the operator to the correct action.
+- 🧭 **Guided mode (decision trees)** — interactive yes/no flows for 12 branch-heavy SOPs (001–010, 016, 017) that lead the operator to the correct action.
+- ✅ **Interactive checklists** — checklist steps (e.g. SOP-015, SOP-017) are tickable with saved progress.
+- ⭐ **Favorites & recently viewed** — star SOPs for a quick filter; recent items surface on the home screen.
+- ♿ **Accessible** — keyboard-navigable cards, focus-trapped modal, tap/keyboard term definitions, `aria-live` guided steps.
+- 🛡️ **Hardened** — strict Content-Security-Policy; automated tests gate data integrity and core flows.
 - 🌐 **4 languages** — English (base) + Korean / Chinese / Japanese. UI, SOP titles & summaries are fully translated; SOP body text is in English with a structure ready for translation.
 - 🌗 **Dark mode** — auto-detects system preference, remembers your choice.
 - 🔗 **Deep links** — every SOP has its own URL (`#/sop/SOP-008`); use **Copy link** to share.
@@ -73,6 +77,23 @@ python -m http.server 8080
 
 > Opening `index.html` directly via `file://` will show the login screen but cannot decrypt.
 > Use the served URL or the live site.
+
+---
+
+## ✅ Testing
+
+```bash
+npm test                       # data-integrity suite (zero-dep): 18 SOPs × 5 langs,
+                               # block-structure parity, glossary/tree integrity,
+                               # critical-rule spot checks, no-secret-leak in ciphertext
+
+npm run e2e:install            # one-time: install Playwright + Chromium
+SOP_TEST_PASS=*** npm run e2e  # end-to-end: login gate, search, language switch,
+                               # decision tree, glossary (credentials via env, never committed)
+```
+
+Run `npm test` before `npm run build` (encrypt) and before every commit. (The integrity
+suite reads the local plaintext master, which is gitignored — so it runs locally, not in CI.)
 
 ---
 
