@@ -103,7 +103,10 @@ group("Secret placeholder consistency (credential SOPs)");
 
 group("Critical business-rule spot checks (all languages)");
 const sop008 = m.data.find(s => s.id === "SOP-008");
-LANGS.forEach(l => ok(JSON.stringify(sop008.body[l]).indexOf("Fully Booked") !== -1, "SOP-008/" + l + " must keep 'Fully Booked' rule"));
+LANGS.forEach(l => ok(JSON.stringify(sop008.body[l]).indexOf("Fully Booked") !== -1, "SOP-008/" + l + " must reference the 'Fully Booked' rule"));
+// 2026-06-10 CEO directive: never record a false reason; use Agoda's official dispute channel
+ok(JSON.stringify(sop008.body.en).indexOf("official dispute") !== -1, "SOP-008 must carry the CEO-directive Agoda rule (official dispute channel)");
+ok(JSON.stringify(sop008.body.en).indexOf("Never record a false") !== -1, "SOP-008 must forbid false rejection reasons (CEO directive)");
 const sop015 = m.data.find(s => s.id === "SOP-015");
 LANGS.forEach(l => ok(JSON.stringify(sop015.body[l]).indexOf("11:15") !== -1, "SOP-015/" + l + " must keep the 11:15 deadline"));
 const sop018 = m.data.find(s => s.id === "SOP-018");

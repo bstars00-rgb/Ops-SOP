@@ -4,7 +4,7 @@
 |---|---|
 | 제품명 | VNOP SOP Hub (Trung tâm SOP VNOP) |
 | 버전 | 1.0 |
-| 최종 업데이트 | 2026-06-07 |
+| 최종 업데이트 | 2026-06-10 |
 | 대상 | VNOP(베트남 운영팀) — 예약 운영 담당자 |
 | 배포 | GitHub Pages · https://bstars00-rgb.github.io/Ops-SOP/ |
 | 저장소 | github.com/bstars00-rgb/Ops-SOP (public) |
@@ -117,3 +117,4 @@ block.t ∈ h | para | list | table | callout | kv | checklist
 | 2026-06-07 | QA/기획 강화: 자동화 테스트, 접근성, CSP, 트리 12, 체크리스트, 즐겨찾기, 검수 배지 |
 | 2026-06-07 | 반응형(노트북·태블릿·모바일) |
 | 2026-06-07 | 본 명세서 작성. SOP 챗봇 보류 결정 |
+| 2026-06-10 | 업데이트 원문(VNOP_SOP_Complete_18_Final_20260610.docx) 반영: **SOP-008 Agoda 규칙을 CEO 지침으로 교체**(허위 거절 사유 금지 → ELLIS에서 요율/매핑 근본 수정 → 수퍼바이저 에스컬레이션(L2) → 불가피 시 Agoda 공식 분쟁채널 사용). 본문·노트·의사결정 트리·용어집(Compensation)·테스트를 5개 언어로 갱신, SOP-008 v1.1(개정 10-Jun-2026). 원문은 자격증명도 마스킹 처리됨(앱은 기존부터 마스킹). |
